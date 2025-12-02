@@ -151,39 +151,6 @@ export class UserService {
     };
   }
 
-  // async update(
-  //   id: number,
-  //   updateUserDto: UpdateUserDto,
-  // ): Promise<{ message: string; data: User }> {
-  //   const user = await this.userRepository.findOneBy({ id });
-  //   if (!user) {
-  //     throw new NotFoundException('User not found');
-  //   }
-  //   const { roles: roleInput, ...userData } = updateUserDto;
-
-  //   // Handle roles - convert single number to array if needed
-  //   let userRoles: Role[] = [];
-  //   if (roleInput !== undefined && roleInput !== null) {
-  //     const roleIds = Array.isArray(roleInput) ? roleInput : [roleInput];
-  //     if (roleIds.length > 0) {
-  //       userRoles = await this.roleRepository.findBy({ id: In(roleIds) });
-  //       if (userRoles.length !== roleIds.length) {
-  //         throw new NotFoundException('One or more roles not found');
-  //       }
-  //     }
-  //   }
-
-  //   const result = this.userRepository.merge(user, {
-  //     ...userData,
-  //     roles: userRoles,
-  //   });
-  //   await this.userRepository.save(result);
-  //   return {
-  //     message: 'User updated successfully',
-  //     data: result,
-  //   };
-  // }
-
   async update(
     id: number,
     updateUserDto: UpdateUserDto,
