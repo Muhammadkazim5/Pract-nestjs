@@ -1,4 +1,11 @@
-import { IsArray, IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsEmail,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -12,7 +19,7 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   password: string;
-  
+
   @IsOptional()
   @IsString()
   image: string;

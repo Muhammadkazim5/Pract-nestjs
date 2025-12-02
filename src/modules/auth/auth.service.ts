@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
@@ -10,42 +14,43 @@ import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
- constructor(
+  constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
-    private jwtService: JwtService
- ){}
+    private jwtService: JwtService,
+  ) {}
   // hash password
   async hashPassword(password: string) {
-   return await bcrypt.hash(password, 10);
+    return await bcrypt.hash(password, 10);
   }
 
   // compare password
   async comparePassword(password: string, hash: string) {
-   return await bcrypt.compare(password, hash);
+    return await bcrypt.compare(password, hash);
   }
 
- async signUp(signUpDto: SignUpDto): Promise<{ message: string; data: User }> {
-  const existingEmail = await this.userRepository.findOne({
-    where: { email: signUpDto.email },
-  });
+  async signUp(signUpDto: SignUpDto): Promise<{ message: string; data: User }> {
+    const existingEmail = await this.userRepository.findOne({
+      where: { email: signUpDto.email },
+      relations: ['roles'],
+    });
 
-  if (existingEmail) {
-    throw new ConflictException('This email address is already registered.');
-  }
+    if (existingEmail) {
+      throw new ConflictException('This email address is already registered.');
+    }
     const user = this.userRepository.create({
       ...signUpDto,
       password: await this.hashPassword(signUpDto.password),
-      roles: [{ id: 3 }],
+      roles: [{ id: 1 }],
     });
     const result = await this.userRepository.save(user);
     return {
       message: 'Signed up successfully!',
       data: result,
     };
- }
+  }
 
- async signIn(signInDto: SignInDto): Promise<any> {
-  const { email, password } = signInDto;
+  async signIn(signInDto: SignInDto): Promise<any> {
+    const { email, password } = signInDto;
     const user = await this.userRepository
       .createQueryBuilder('user')
       .addSelect('user.password')
@@ -68,15 +73,18 @@ export class AuthService {
       message: 'Logged in successfully!',
       data: { ...user, accessToken: accessToken },
     };
- }
- async getProfile(id: number): Promise<{ message: string; data: User }> {
-  const user = await this.userRepository.findOne({ where:{ id },  relations: ['roles'] });
-  if (!user) {
-    throw new NotFoundException('User not found');
   }
-  return {
-    message: 'Profile retrieved successfully',
-    data: user,
-  };
- }
+  async getProfile(id: number): Promise<{ message: string; data: User }> {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['roles'],
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return {
+      message: 'Profile retrieved successfully',
+      data: user,
+    };
+  }
 }
