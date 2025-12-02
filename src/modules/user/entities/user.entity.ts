@@ -2,10 +2,16 @@ import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
+  Entity,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
+import { Role } from 'src/modules/roles/entities/role.entity';
+
+@Entity()
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
@@ -16,12 +22,15 @@ export class User {
   @Column()
   email: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, select: false })
   @Exclude()
   password: string;
 
   @Column({ nullable: true })
   address: string;
+
+  @Column({ nullable: true })
+  image: string;
 
   @Column({ nullable: true })
   phone: string;
@@ -34,4 +43,18 @@ export class User {
 
   @DeleteDateColumn({ nullable: true })
   deletedAt: Date;
+
+  @ManyToMany(() => Role, { eager: false, onDelete: "CASCADE" })
+  @JoinTable({
+    name: "users_roles",
+    joinColumn: {
+      name: "user_id",
+      referencedColumnName: "id",
+    },
+    inverseJoinColumn: {
+      name: "role_id",
+      referencedColumnName: "id",
+    },
+  })
+  roles: Role[];
 }
