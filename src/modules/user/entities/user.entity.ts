@@ -5,12 +5,14 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Role } from 'src/modules/roles/entities/role.entity';
-
+import { Post } from 'src/modules/post/entities/post.entity';
+import { Comment } from 'src/modules/comments/entities/comment.entity';
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
@@ -57,4 +59,10 @@ export class User {
     },
   })
   roles: Role[];
+
+  @OneToMany(()=> Post,(post) => post.user)
+  posts: Post[];
+
+  @OneToMany(()=> Comment,(comment)=>comment.user)
+  comments: Comment[];
 }
