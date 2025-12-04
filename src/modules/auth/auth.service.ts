@@ -87,4 +87,11 @@ export class AuthService {
       data: user,
     };
   }
+
+  async logout(id: number) {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+
+    return { message: 'Logged out successfully' };
+  }
 }
