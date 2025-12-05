@@ -42,7 +42,8 @@ export class PostService {
     };
   }
   filterData = async (filter) => {
-    const queryBuilder = this.postRepository.createQueryBuilder('p');
+    const queryBuilder = this.postRepository.createQueryBuilder('p')
+    .leftJoinAndSelect('p.user', 'user');
 
     if(filter.id){
       queryBuilder.andWhere('p.id = :id', {id: filter.id})
