@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Post } from './entities/post.entity';
 import { User } from '../user/entities/user.entity';
+import { paginate, IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class PostService {
@@ -30,24 +31,10 @@ export class PostService {
     }
   }
 
-  async findAll(filter, options) {
-    const queryBuilder =await this.filterData(filter);
-    const page = Number(options?.page) || 1;
-    const limit =Number(options?.limit) || 10;
-    const [items,totalItems] =await queryBuilder
-    .skip((page-1)*limit)
-    .take(limit)
-    .getManyAndCount();
+  async findAll(filter, options: IPaginationOptions): Promise<{ statusCode: HttpStatus; message: string; result: Pagination<Post> }> {
+    const queryBuilder = await this.filterData(filter);
+    const result = await paginate<Post>(queryBuilder, options);
 
-    const result = {
-      items,
-      meta: {
-        totalItems,
-        itemsPerPage: limit,
-        totalPages: Math.ceil(totalItems / limit),
-        currentPage: page,
-      },
-    };
     return {
       statusCode: HttpStatus.OK,
       message: 'Post list retrieved successfully',
