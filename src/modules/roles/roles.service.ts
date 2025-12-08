@@ -55,7 +55,7 @@ export class RolesService {
     if (filter.name) {
       queryBuilder.andWhere('r.name ILIKE :name', { name: `%${filter.name}%` });
     }
-    queryBuilder.orderBy('r.id', 'DESC');
+    queryBuilder.orderBy('r.id', 'ASC');
 
     return queryBuilder;
   };

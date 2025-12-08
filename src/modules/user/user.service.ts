@@ -132,7 +132,7 @@ export class UserService {
       });
     }
 
-    queryBuilder.orderBy('u.id', 'DESC');
+    queryBuilder.orderBy('u.id', 'ASC');
 
     return queryBuilder;
   };

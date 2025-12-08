@@ -57,7 +57,7 @@ export class PostService {
     if(filter.created_at){
       queryBuilder.andWhere('DATE(p.createdAt) = :created_at', {created_at: filter.created_at})
     }
-    queryBuilder.orderBy('p.id', 'DESC');
+    queryBuilder.orderBy('p.id', 'ASC');
     return queryBuilder;
   }
 
