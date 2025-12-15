@@ -2,20 +2,20 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Pa
 import { CrudService } from './crud.service';
 import { CreateCrudDto } from './dto/create-crud.dto';
 import { UpdateCrudDto } from './dto/update-crud.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+// import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('crud')
 export class CrudController {
   constructor(private readonly crudService: CrudService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   create(@Body() createCrudDto: CreateCrudDto ) {
     return this.crudService.create(createCrudDto);
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   findAll(
     @Query() filter,
     @Query('page', ParseIntPipe) page: number = 1,
@@ -25,19 +25,19 @@ export class CrudController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string) {
     return this.crudService.findOne(+id);
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   update(@Param('id') id: string, @Body() updateCrudDto: UpdateCrudDto) {
     return this.crudService.update(+id, updateCrudDto);
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   remove(@Param('id') id: string) {
     return this.crudService.remove(+id);
   }

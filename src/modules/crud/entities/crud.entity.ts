@@ -1,14 +1,11 @@
 import {
   Column,
-  CreateDateColumn,
-  DeleteDateColumn,
   Entity,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from 'typeorm';
-
+import { DefaultEntity } from '../../../common/default.entity'
 @Entity()
-export class Crud {
+export class Crud extends DefaultEntity{
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -21,12 +18,4 @@ export class Crud {
   @Column()
   age: number;
 
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
-
-  @DeleteDateColumn({ nullable: true })
-  deletedAt: Date;
 }

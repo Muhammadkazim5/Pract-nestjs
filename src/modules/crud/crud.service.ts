@@ -37,9 +37,30 @@ export class CrudService {
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();
-
+      const formattedItems = items.map((item) => {
+        const {
+          meta_data,
+          is_active,
+          created_at,
+          updated_at,
+          created_by,
+          updated_by,
+          ...crudFields
+        } = item;
+    
+        return {
+          ...crudFields,        // ✅ Crud fields first
+          meta_data,
+          is_active,
+          created_at,
+          updated_at,
+          created_by,
+          updated_by,
+        };
+      });
     const result = {
-      items,
+      // items: items.map(mapCrudResponse), // ✅ FIX HERE
+      items : formattedItems,   // ✅ use formattedItems
       meta: {
         totalItems,
         // itemCount: items.length,
