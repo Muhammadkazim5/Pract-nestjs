@@ -9,6 +9,7 @@ import { RolesModule } from './modules/roles/roles.module';
 import { PostModule } from './modules/post/post.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { LookupModule } from './modules/lookup/lookup.module';
+import { TestModule } from './modules/test/test.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { LookupModule } from './modules/lookup/lookup.module';
     PostModule,
     CommentsModule,
     LookupModule,
+    TestModule,
   ],
 })
 export class AppModule {}
