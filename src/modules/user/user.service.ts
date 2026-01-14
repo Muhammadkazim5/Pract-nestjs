@@ -10,6 +10,7 @@ import { Repository, In } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Role } from '../roles/entities/role.entity';
+import { responseMessage } from 'src/common/response.messages';
 
 @Injectable()
 export class UserService {
@@ -56,7 +57,7 @@ export class UserService {
       });
       const result = await this.userRepository.save(user);
       return {
-        message: 'User created successfully',
+        message: responseMessage.CREATED_DATA,
         data: result,
       };
     } catch (error) {
@@ -90,7 +91,7 @@ export class UserService {
 
     return {
       statusCode: HttpStatus.OK,
-      message: 'User list retrieved successfully',
+      message: responseMessage.FETCH_DATA,
       result,
     };
   }
@@ -146,7 +147,7 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
     return {
-      message: 'User retrieved successfully',
+      message: responseMessage.FETCH_DATA,
       data: user,
     };
   }
@@ -184,7 +185,7 @@ export class UserService {
       const result = await this.userRepository.save(updatedUser);
 
       return {
-        message: 'User updated successfully',
+        message: responseMessage.UPDATED_DATA,
         data: result,
       };
     } catch (error) {
@@ -199,7 +200,7 @@ export class UserService {
     }
     await this.userRepository.delete(id);
     return {
-      message: 'User deleted successfully',
+      message: responseMessage.DELETED_DATA,
     };
   }
 }
