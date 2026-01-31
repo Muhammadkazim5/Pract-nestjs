@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Comment } from './entities/comment.entity';
 import { Post } from '../post/entities/post.entity';
 import { User } from '../user/entities/user.entity';
+import { AuditService } from '../audit/audit.service';
 @Injectable()
 export class CommentsService {
   constructor(
@@ -13,6 +14,7 @@ export class CommentsService {
     private readonly commentRepository: Repository<Comment>,
     @InjectRepository(Post) private readonly postRepository: Repository<Post>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private readonly auditService: AuditService,
   ) {}
   async create(createCommentDto: CreateCommentDto) {
     const { userId, postId, ...commentData } = createCommentDto;
@@ -118,6 +120,10 @@ export class CommentsService {
     }
     Object.assign(comment, commentData);
     const result = await this.commentRepository.save(comment);
+    await this.auditService.create(null, 'update', result.id, 'comment', {
+      before: comment,
+      after: result,
+    });
     return {
       message: 'Comment updated successfully',
       data: result,
@@ -130,6 +136,9 @@ export class CommentsService {
       throw new NotFoundException('Comment not found');
     }
     this.commentRepository.delete(id);
+    this.auditService.create(null, 'delete', id, 'comment', {
+      deleted: comment,
+    });
     return {
       message: 'Comment deleted successfully',
     };

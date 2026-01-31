@@ -4,11 +4,13 @@ import { UpdateCrudDto } from './dto/update-crud.dto';
 import { Repository } from 'typeorm';
 import { Crud } from './entities/crud.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class CrudService {
   constructor(
     @InjectRepository(Crud) private readonly crudRepository: Repository<Crud>,
+    private readonly auditService: AuditService,
   ) {}
   async create(
     createCrudDto: CreateCrudDto,
@@ -37,30 +39,30 @@ export class CrudService {
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();
-      const formattedItems = items.map((item) => {
-        const {
-          meta_data,
-          is_active,
-          created_at,
-          updated_at,
-          created_by,
-          updated_by,
-          ...crudFields
-        } = item;
-    
-        return {
-          ...crudFields,        // ✅ Crud fields first
-          meta_data,
-          is_active,
-          created_at,
-          updated_at,
-          created_by,
-          updated_by,
-        };
-      });
+    const formattedItems = items.map((item) => {
+      const {
+        meta_data,
+        is_active,
+        created_at,
+        updated_at,
+        created_by,
+        updated_by,
+        ...crudFields
+      } = item;
+
+      return {
+        ...crudFields, // ✅ Crud fields first
+        meta_data,
+        is_active,
+        created_at,
+        updated_at,
+        created_by,
+        updated_by,
+      };
+    });
     const result = {
       // items: items.map(mapCrudResponse), // ✅ FIX HERE
-      items : formattedItems,   // ✅ use formattedItems
+      items: formattedItems, // ✅ use formattedItems
       meta: {
         totalItems,
         // itemCount: items.length,
@@ -93,16 +95,15 @@ export class CrudService {
         description: `%${filter.description}%`,
       });
     }
-    if(filter.created_at){
-      queryBuilder.andWhere('DATE(c.createdAt) = :created_at',{
-        created_at: filter.created_at
-      })
+    if (filter.created_at) {
+      queryBuilder.andWhere('DATE(c.createdAt) = :created_at', {
+        created_at: filter.created_at,
+      });
     }
     queryBuilder.orderBy('c.id', 'DESC');
 
     return queryBuilder;
   };
-
 
   async findOne(id: number): Promise<{ message: string; data: Crud }> {
     const result = await this.crudRepository.findOneBy({ id });
@@ -125,6 +126,10 @@ export class CrudService {
     }
     Object.assign(crud, updateCrudDto);
     const result = await this.crudRepository.save(crud);
+    await this.auditService.create(null, 'update', result.id, 'crud', {
+      before: crud,
+      after: result,
+    });
     return {
       message: 'Crud updated successfully',
       data: result,
@@ -137,6 +142,9 @@ export class CrudService {
       throw new NotFoundException('Crud not found');
     }
     await this.crudRepository.delete(id);
+    await this.auditService.create(null, 'delete', id, 'crud', {
+      deleted: crud,
+    });
     return {
       message: 'Crud deleted successfully',
     };

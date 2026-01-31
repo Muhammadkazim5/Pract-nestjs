@@ -9,6 +9,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { Repository, In } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
+import { AuditService } from '../audit/audit.service';
 import { Role } from '../roles/entities/role.entity';
 
 @Injectable()
@@ -16,6 +17,7 @@ export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Role) private roleRepository: Repository<Role>,
+    private readonly auditService: AuditService,
   ) {}
   async create(
     createUserDto: CreateUserDto,
@@ -183,6 +185,12 @@ export class UserService {
       // 💾 Save update
       const result = await this.userRepository.save(updatedUser);
 
+      // Audit log (admin_id currently unknown in service layer)
+      await this.auditService.create(null, 'update', result.id, 'user', {
+        before: user,
+        after: result,
+      });
+
       return {
         message: 'User updated successfully',
         data: result,
@@ -198,6 +206,9 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
     await this.userRepository.delete(id);
+    await this.auditService.create(null, 'delete', id, 'user', {
+      deleted: user,
+    });
     return {
       message: 'User deleted successfully',
     };

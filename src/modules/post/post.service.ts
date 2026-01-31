@@ -1,37 +1,57 @@
-import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Post } from './entities/post.entity';
 import { User } from '../user/entities/user.entity';
-import { paginate, IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
+import { AuditService } from '../audit/audit.service';
+import {
+  paginate,
+  IPaginationOptions,
+  Pagination,
+} from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class PostService {
   constructor(
     @InjectRepository(Post) private postRepository: Repository<Post>,
     @InjectRepository(User) private userRepository: Repository<User>,
+    private readonly auditService: AuditService,
   ) {}
-  async create(createPostDto: CreatePostDto): Promise<{ message: string; data: Post }> {
+  async create(
+    createPostDto: CreatePostDto,
+  ): Promise<{ message: string; data: Post }> {
     try {
-    const { userId, ...postData } = createPostDto;
-    const user = await this.userRepository.findOneBy({ id: userId });
-    if (!user) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-    }
-    const post = this.postRepository.create({ ...postData, user });
-    const result = await this.postRepository.save(post);
-    return {
-      message: 'Post created successfully',
-      data: result,
-    };
+      const { userId, ...postData } = createPostDto;
+      const user = await this.userRepository.findOneBy({ id: userId });
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+      const post = this.postRepository.create({ ...postData, user });
+      const result = await this.postRepository.save(post);
+      return {
+        message: 'Post created successfully',
+        data: result,
+      };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  async findAll(filter, options: IPaginationOptions): Promise<{ statusCode: HttpStatus; message: string; result: Pagination<Post> }> {
+  async findAll(
+    filter,
+    options: IPaginationOptions,
+  ): Promise<{
+    statusCode: HttpStatus;
+    message: string;
+    result: Pagination<Post>;
+  }> {
     const queryBuilder = await this.filterData(filter);
     const result = await paginate<Post>(queryBuilder, options);
 
@@ -42,28 +62,38 @@ export class PostService {
     };
   }
   filterData = async (filter) => {
-    const queryBuilder = this.postRepository.createQueryBuilder('p')
-    .leftJoinAndSelect('p.user', 'user');
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('p')
+      .leftJoinAndSelect('p.user', 'user');
 
-    if(filter.id){
-      queryBuilder.andWhere('p.id = :id', {id: filter.id})
+    if (filter.id) {
+      queryBuilder.andWhere('p.id = :id', { id: filter.id });
     }
-    if(filter.title){
-      queryBuilder.andWhere('LOWER(p.title) LIKE LOWER(:title)', {title: `%${filter.title}%`})
+    if (filter.title) {
+      queryBuilder.andWhere('LOWER(p.title) LIKE LOWER(:title)', {
+        title: `%${filter.title}%`,
+      });
     }
-    if(filter.content){
-      queryBuilder.andWhere('LOWER(p.content) LIKE LOWER(:content)', {content: `%${filter.content}%`})
+    if (filter.content) {
+      queryBuilder.andWhere('LOWER(p.content) LIKE LOWER(:content)', {
+        content: `%${filter.content}%`,
+      });
     }
-    if(filter.created_at){
-      queryBuilder.andWhere('DATE(p.createdAt) = :created_at', {created_at: filter.created_at})
+    if (filter.created_at) {
+      queryBuilder.andWhere('DATE(p.createdAt) = :created_at', {
+        created_at: filter.created_at,
+      });
     }
     queryBuilder.orderBy('p.id', 'ASC');
     return queryBuilder;
-  }
+  };
 
   async findOne(id: number) {
-    const post = await this.postRepository.findOne({where: {id}, relations: ['user']});
-    if(!post){
+    const post = await this.postRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+    if (!post) {
       throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
     }
     return {
@@ -74,8 +104,11 @@ export class PostService {
   }
 
   async update(id: number, updatePostDto: UpdatePostDto) {
-    const post = await this.postRepository.findOne({where: {id}, relations: ['user']});
-    if(!post){
+    const post = await this.postRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+    if (!post) {
       throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
     }
     const { userId, ...postData } = updatePostDto;
@@ -88,6 +121,10 @@ export class PostService {
     }
     Object.assign(post, postData);
     const result = await this.postRepository.save(post);
+    await this.auditService.create(null, 'update', result.id, 'post', {
+      before: post,
+      after: result,
+    });
     return {
       statusCode: HttpStatus.OK,
       message: 'Post updated successfully',
@@ -96,11 +133,14 @@ export class PostService {
   }
 
   async remove(id: number) {
-    const post = await this.postRepository.findOneBy({id});
-    if(!post){
+    const post = await this.postRepository.findOneBy({ id });
+    if (!post) {
       throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
     }
     await this.postRepository.delete(id);
+    await this.auditService.create(null, 'delete', id, 'post', {
+      deleted: post,
+    });
     return {
       statusCode: HttpStatus.OK,
       message: 'Post deleted successfully',

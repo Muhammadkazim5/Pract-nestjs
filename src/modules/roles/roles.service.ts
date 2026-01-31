@@ -4,11 +4,13 @@ import { UpdateRoleDto } from './dto/update-role.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role } from './entities/role.entity';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class RolesService {
   constructor(
     @InjectRepository(Role) private readonly roleRepository: Repository<Role>,
+    private readonly auditService: AuditService,
   ) {}
   async create(
     createRoleDto: CreateRoleDto,
@@ -80,6 +82,10 @@ export class RolesService {
     }
     Object.assign(role, updateRoleDto);
     const result = await this.roleRepository.save(role);
+    await this.auditService.create(null, 'update', result.id, 'role', {
+      before: role,
+      after: result,
+    });
     return {
       message: 'Role updated successfully',
       data: result,
@@ -92,6 +98,9 @@ export class RolesService {
       throw new NotFoundException('Role not found');
     }
     await this.roleRepository.delete(id);
+    await this.auditService.create(null, 'delete', id, 'role', {
+      deleted: role,
+    });
     return {
       message: 'Role deleted successfully',
     };
